@@ -1,0 +1,16 @@
+{
+  "name": "role-bot",
+  "version": "0.1.0",
+  "description": "Allows self service role setting",
+  "main": "app.js",
+  "keywords": [
+    "discord",
+    "bot"
+  ],
+  "author": "Brandon Loeffler",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^11.1.0",
+    "pm2": "^2.6.1"
+  }
+}
