@@ -27,8 +27,7 @@ if(!Config.hasOwnProperty('commandPrefix')) {
 }
 
 var commands = {
-
-    // Required Permissions for this command to work are Manage Roles
+    // TODO: Add command to create a temporary text channel that auto deletes after a custom set amount of time up to a default maximum.
     'iam': {
         public: true,
         usage: '<team>',
@@ -80,6 +79,7 @@ var commands = {
 
 if(AuthDetails.hasOwnProperty("client_id")) {
     commands["invite"] = {
+        public: false,
         description: "generates an invite link you can use to invite the bot to your server. WARNING: This bot will only function on the Team Harmony server",
         process: function(bot, msg, suffix) {
             msg.channel.send("invite link: https://discordapp.com/oauth2/authorize?permissions=268950592&scope=bot&client_id=" + AuthDetails.client_id);
@@ -138,6 +138,8 @@ function checkMessageForCommands(msg) {
                     var sortedCommands = Object.keys(commands).sort();
 
                     for(var i in sortedCommands) {
+                        // TODO: Add a check for cmd.public to see if it should be accessible by everybody. If not, then check for permissions against current user
+                        // to see if they have minimum (define minimum) permissions to perform command. 
                         var cmd = sortedCommands[i];
                         info += "**" + Config.commandPrefix + cmd + "** ";
 
