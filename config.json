@@ -1,3 +1,5 @@
 {
-    "commandPrefix": "."
+    "commandPrefix": ".",
+    "chanMinTime": 1,
+    "chanMaxTime": 90
 }

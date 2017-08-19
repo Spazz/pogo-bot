@@ -19,6 +19,8 @@ try {
     // No config file, use defaults
     // Additional defaults can be added here if needed
     Config.commandPrefix = '!';
+    Config.chanMinTime = 1;
+    Config.chanMaxTime = 90;
 }
 
 // Secondary check to make sure there is at minimum a command prefix
@@ -27,7 +29,6 @@ if(!Config.hasOwnProperty('commandPrefix')) {
 }
 
 var commands = {
-    // TODO: Add command to create a temporary text channel that auto deletes after a custom set amount of time up to a default maximum.
     'iam': {
         public: true,
         usage: '<team>',
@@ -42,7 +43,11 @@ var commands = {
             }
 
             var args = suffix.split(/\s+/g);
-            var role = msg.guild.roles.find('name', args.shift());
+            
+            var role = args.shift();
+            role = role.ucfirst();
+            role = msg.guild.roles.find('name', role);
+            
             var member = msg.member;
             console.log(role.name);
             var editable = checkForRole(msg, role);
@@ -73,6 +78,42 @@ var commands = {
                 }
             });
             msg.author.send(txt);
+        }
+    },
+    "chan": {
+        //TODO: In progress: Add logic to create a temporary channel then add some sort of a script to go back and check delete the channel afterwards.
+        public: false,
+        usage: "<pokemon> <location-name> <duration>",
+        description: "Create a temporary text channel intended for collaberating on gym specific raids. Max channel creation time is 90 minutes.",
+        process: function(bot, msg, suffix) {
+            var args = suffix.split(/\s+/g);
+            var pokemon = args[0];
+            var location = args[1];
+            var duration = args[2];
+
+            var channelName = pokemon + "-" + location;
+            
+            if(args.length > 3) {
+                return msg.channel.send(msg.author + " I think something was entered wrong when writing the command. Please type .chan <pokemon> <location> <duration> to create a temporary channel. When entering the location, make sure there are no additional spaces. If the location is multiple words, please use a hyphen instead");
+            }
+
+            if(!Number.isInteger(duration) && duration < Config.chanMinTime && duration > Config.chanMaxTime) {
+                return msg.channel.send(msg.author + " The duration you entered was not valid. Please enter a duration of minutes between 1 and 90");
+            }
+            // TODO: add channel information here so we know what channel to terminate later.
+            var channelData = "";
+
+            msg.guild.createChannel(channelName, 'text')
+                .then(
+                    msg.author.send(msg.author + ' your channel has been created. This channel will expire in ${duration} minutes'),
+                    
+                    fs.writeFile('/data', channelData, function(err) {
+                        if(err) {
+                            console.log(err);
+                        }
+                    })
+                    
+            ).catch(console.error);
         }
     }
 }
@@ -141,20 +182,25 @@ function checkMessageForCommands(msg) {
                         // TODO: Add a check for cmd.public to see if it should be accessible by everybody. If not, then check for permissions against current user
                         // to see if they have minimum (define minimum) permissions to perform command. 
                         var cmd = sortedCommands[i];
-                        info += "**" + Config.commandPrefix + cmd + "** ";
+                        
+                        console.log(cmd.public);
 
-                        var usage = commands[cmd].usage;
-                        if(usage) { // If there is anything in usage
-                            info += " " + usage + "\n";
-                        } else {
-                            info += "\n";
-                        }
-                        var description = commands[cmd].description;
-                        if(description instanceof Function) {
-                            description = description();
-                        }
-                        if(description) {
-                            info += description + "\n\n";
+                        if(commands[cmd].public) {
+                            info += "**" + Config.commandPrefix + cmd + "** ";
+                        
+                            var usage = commands[cmd].usage;
+                            if(usage) { // If there is anything in usage
+                                info += " " + usage + "\n";
+                            } else {
+                                info += "\n";
+                            }
+                            var description = commands[cmd].description;
+                            if(description instanceof Function) {
+                                description = description();
+                            }
+                            if(description) {
+                                info += description + "\n\n";
+                            }
                         }
                     }
                     console.log(info);
@@ -192,6 +238,12 @@ function checkForRole(msg, role) {
     }
     return addable;
 }
+
+String.prototype.ucfirst = function() {
+    return this.charAt(0).toUpperCase() + this.substr(1).toLowerCase();
+}
+
+// TODO: Add a function to check the file for channels that need to be terminated and terminate any that need to go.
 
 bot.on('message', (msg) => checkMessageForCommands(msg));
 bot.on('messageUpdate', (oMsg, nMsg) => {
