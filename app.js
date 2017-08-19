@@ -128,15 +128,6 @@ if(AuthDetails.hasOwnProperty("client_id")) {
     }
 }
 
-bot.on('ready', () => {
-    console.log("Logged In! Serving in " + bot.guilds.array().length + " servers");
-});
-
-bot.on('disconnected', () => {
-    console.log("Disconnected!");
-    process.exit(1);
-});
-
 function checkMessageForCommands(msg) {
     // Check if the message is a command
     if(msg.author.id != bot.user.id && (msg.content.startsWith(Config.commandPrefix))) {
@@ -244,6 +235,19 @@ String.prototype.ucfirst = function() {
 }
 
 // TODO: Add a function to check the file for channels that need to be terminated and terminate any that need to go.
+
+bot.on('ready', () => {
+    console.log("Logged In! Serving in " + bot.guilds.array().length + " servers");
+    bot.user.setGame(".help for commands!")
+        .then(console.log("Game set!"))
+        .catch(console.error);
+    bot.user.showCurrentGame = true;
+});
+
+bot.on('disconnected', () => {
+    console.log("Disconnected!");
+    process.exit(1);
+});
 
 bot.on('message', (msg) => checkMessageForCommands(msg));
 bot.on('messageUpdate', (oMsg, nMsg) => {
