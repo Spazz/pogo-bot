@@ -32,25 +32,31 @@ var commands = {
     'iam': {
         public: true,
         usage: '<team>',
-        description: "Add a team role (Mystic, Instint, or Valor) to yourself. If you are already assigned a team role then you must get a Moderator to help you.",
+        description: "Add a team role (Mystic, Instint, or Valor) to yourself. If you are already assigned a team role then you must get an Officer to help you.",
         process: function(bot, msg, suffix) {
-            console.log(msg.channel.name);
             var chan = msg.channel;
+            
             if(chan != msg.guild.channels.find('name', 'team-assignment')) {
-                console.log(msg.channel.name + " is not equal to team-assignment");
+                console.log(msg.author + " requested .iam in an invalid channel. ("+ chan +")");
                 msg.author.send("Please send team requests in the " + msg.guild.channels.find('name', 'team-assignment') + " channel");
                 return; //Requesting role in the wrong channel
             }
-
+            // Set variables
             var args = suffix.split(/\s+/g);
-            
-            var role = args.shift();
-            role = role.ucfirst();
-            role = msg.guild.roles.find('name', role);
-            
+            var arg = args.shift();
             var member = msg.member;
-            console.log(role.name);
-            var editable = checkForRole(msg, role);
+            
+            arg = arg.ucfirst();
+            
+            try {
+                var role = msg.guild.roles.find('name', arg);
+            } catch(e) {
+                msg.channel.send(msg.author + " I could not identify " + arg + " as a role in this server.");
+                console.log("Error: " + e);
+                return;
+            }
+
+            var editable = checkForRole(msg, role); // must come after role check and assignment
             
             if(editable != true) {
                 msg.channel.send(msg.author + " Adding " + role + " was unsuccessful. You are already a member of a Team role. If you need to swap roles for any reason please reach out to an " + msg.guild.roles.find('name', 'Officer Jenny') + ".");
@@ -58,9 +64,31 @@ var commands = {
             }
             try {
                 member.addRole(role);
-                msg.channel.send("Adding " + role + " to " + msg.author);
+                msg.channel.send(msg.author + " is now part of Team " + role);
+                console.log(msg.author.username + " was added to " + role.name);
             } catch (e) {
-                console.log("There was an error: " + e);
+                console.log("Error: " + e);
+            }
+
+            function checkForRole(msg, role) {
+                // Set static roles
+                var teams = ['Instinct', 'Mystic', 'Valor'];
+                var addable = true;
+
+                // Check if the role they are requesting is part of the static roles
+                if (teams.includes(role.name)) {
+                    // If it is, check if they already have one of the roles.
+                    teams.forEach(function(role) {
+                        var hasRole = msg.member.roles.exists('name', role);
+                        
+                        if(hasRole) {
+                            console.log(msg.author.username + ' has the role ' + role + " and cannot be added to another Team role.");
+                            addable = false;
+                            return false;
+                        }
+                    }, this);
+                }
+                return addable;
             }
         }
     },
@@ -131,9 +159,10 @@ if(AuthDetails.hasOwnProperty("client_id")) {
 function checkMessageForCommands(msg) {
     // Check if the message is a command
     if(msg.author.id != bot.user.id && (msg.content.startsWith(Config.commandPrefix))) {
-        console.log("Command " + msg.content + " requested from " + msg.author.username);
         var cmdTxt = msg.content.split(/\s+/g)[0].substring(Config.commandPrefix.length).toLowerCase();
         var suffix = msg.content.substring(cmdTxt.length+Config.commandPrefix.length+1); // Adding prefix length and one for the space
+
+        console.log("Command " + msg.content + " requested by " + msg.author.username);
         
         try {
             var cmd = commands[cmdTxt];
@@ -200,34 +229,13 @@ function checkMessageForCommands(msg) {
             } else if(cmd) {
                 cmd.process(bot,msg,suffix);
             }
-
-            
+  
         } catch(e) {
-            msg.channel.send("I am sorry, there was an issue with that command.");
+            msg.channel.send("I am sorry, there was an issue executing that command.");
+            console.log("Error with command: " + e);
             return;
         }
     }
-}
-
-function checkForRole(msg, role) {
-    // Set static roles
-    var teams = ['Instinct', 'Mystic', 'Valor'];
-    var addable = true;
-
-    // Check if the role they are requesting is part of the static roles
-    if (teams.includes(role.name)) {
-        // If it is, check if they already have one of the roles.
-        teams.forEach(function(role) {
-            var hasRole = msg.member.roles.exists('name', role);
-            
-            if(hasRole) {
-                console.log(msg.author.username + ' has the role ' + role + " and cannot be added to another Team role.");
-                addable = false;
-                return false;
-            }
-        }, this);
-    }
-    return addable;
 }
 
 String.prototype.ucfirst = function() {
@@ -238,10 +246,14 @@ String.prototype.ucfirst = function() {
 
 bot.on('ready', () => {
     console.log("Logged In! Serving in " + bot.guilds.array().length + " servers");
-    bot.user.setGame(".help for commands!")
-        .then(console.log("Game set!"))
-        .catch(console.error);
-    bot.user.showCurrentGame = true;
+    bot.user.setPresence({
+        game: {
+            name: Config.commandPrefix + 'help for commands',
+            type: 0
+        }
+    })
+    .then(console.log("Presence Set!"))
+    .catch(console.error)
 });
 
 bot.on('disconnected', () => {
