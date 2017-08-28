@@ -101,8 +101,13 @@ var commands = {
 
             var txt = ""
             roles.forEach(function(val, ind) {
-                if(val.name === "Mystic" || val.name === "Valor" || val.name === "Instinct") {
+                
+                if(msg.member.hasPermission("MANAGE_ROLES", false, true, true)) {
                     txt += val.name + " - " + val.members.size + "\n";
+                } else {
+                    if(val.name === "Mystic" || val.name === "Valor" || val.name === "Instinct") {
+                        txt += val.name + " - " + val.members.size + "\n";
+                    }
                 }
             });
             msg.author.send(txt);
