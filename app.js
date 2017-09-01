@@ -44,6 +44,12 @@ var commands = {
             // Set variables
             var args = suffix.split(/\s+/g);
             var arg = args.shift();
+            if(arg === '') {
+                console.log("No Arguments")
+                msg.channel.send(msg.author + " You did not designate a role. Please use .iam <role> to be assigned a team role");
+                return;
+            }
+
             var member = msg.member;
             
             arg = arg.ucfirst();
