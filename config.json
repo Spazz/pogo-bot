@@ -1,5 +1,4 @@
 {
     "commandPrefix": ".",
-    "chanMinTime": 1,
-    "chanMaxTime": 90
+    "bannedRoles": ["Professor Willow","Officer Jenny" ,"Nurse Joy","Team Harmony Bot","SilphRoad","Silenced","Mystic","Valor","Instinct"]
 }

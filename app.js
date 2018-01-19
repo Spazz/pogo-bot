@@ -1,7 +1,7 @@
 "use strict";
-var Discord = require('discord.js');
-var fs      = require('fs');
-var bot     = new Discord.Client();
+const Discord   = require('discord.js');
+const fs        = require('fs');
+const bot       = new Discord.Client();
 
 // Get Auth token
 try {
@@ -19,8 +19,6 @@ try {
     // No config file, use defaults
     // Additional defaults can be added here if needed
     Config.commandPrefix = '!';
-    Config.chanMinTime = 1;
-    Config.chanMaxTime = 90;
 }
 
 // Secondary check to make sure there is at minimum a command prefix
@@ -28,165 +26,9 @@ if(!Config.hasOwnProperty('commandPrefix')) {
     Config.commandPrefix = '!';
 }
 
-var commands = {
-    'iam': {
-        public: true,
-        usage: '<team>',
-        description: "Add a team role (Mystic, Instint, or Valor) to yourself. If you are already assigned a team role then you must get an Officer to help you.",
-        process: function(bot, msg, suffix) {
-            try {
-                var teams = ['Instinct', 'Mystic', 'Valor'];
-                var chan = msg.channel;
-                var member = msg.member;
-                var args = suffix.split(/\s+/g);
-                var arg = args.shift();
-                arg = arg.ucfirst();
-            } catch (e) {
-                console.log(`Unable to set variables`);
-            }
-
-            //Check if the command was sent to the appropriate channel.
-            if(chan != msg.guild.channels.find('name', 'team-assignment')) {
-                console.log(msg.author.username + " requested .iam in an invalid channel. ("+ chan.name +")");
-                return msg.author.send("Please send team requests in the " + msg.guild.channels.find('name', 'team-assignment') + " channel"); //Requesting role in the wrong channel
-            }
-
-            // Check for a suffix. If we don't find one, return a an error.
-            if (!arg) {
-                console.log(msg.author.username + " did not designate a role.");
-                return msg.channel.send(`${msg.author} You did not provide a role. Please use .iam <role> to be assigned a team role.`);
-            }
-            if(!teams.includes(arg)) {
-                console.log(msg.author.username + " did not designate an appropriate role.");
-                return msg.channel.send(`${msg.author} ${arg} is not an appropriate team role. Please use .iam <role> to be assigned a team role. Where <role> is an appropriate Pokemon Team.`);
-            }
-
-            try {
-                var role = msg.guild.roles.find('name', arg);
-            } catch(e) {
-                msg.channel.send(msg.author + " I could not identify " + arg + " as a role in this server.");
-                return console.log("Error: " + e);
-            }
-
-            console.log(`Found: ${role.name}`);
-            try {
-                // must come after role check and assignment
-                var editable = checkForRole(msg, role, teams);  
-              
-            } catch (e) {
-                console.log(`Error: ${e} (Unable to check if User already has a role assigned)`);
-            }
-            console.log(editable);
-            if(editable.status === false) {
-                return msg.channel.send(`${msg.author} Adding ${role} was unsuccessful. You are already a member of ${msg.guild.roles.find('name', editable.role)}. If you need to swap roles for any reason please reach out to an ${msg.guild.roles.find('name', 'Officer Jenny')}.`);
-            }
-
-            console.log(`Trying to add ${role.name} to ${msg.member.user.username}`);
-            try {
-                member.addRole(role);
-                msg.channel.send(`${msg.author} is now part of Team ${role}`);
-                console.log(msg.author.username + " was added to " + role.name);
-            } catch (e) {
-                console.log("Error: " + e);
-            }
-
-            function checkForRole(msg, role, teams) {
-                var addable = true;
-                var memberRoles = msg.member._roles;
-                console.log(memberRoles);
-                // Check if the role they are requesting is part of the static roles
-                if (teams.includes(role.name)) {
-                    // If it is, check if they already have one of the roles.
-                    teams.forEach(function(role) {
-                        var hasRole = member.roles.exists('name', role);
-                        
-                        if(hasRole) {
-                            console.log(msg.author.username + ' has the role ' + role + " and cannot be added to another Team role.");
-                            addable = {"status": false, "role": role};
-                            return false;
-                        }
-                    }, this);
-                }
-                return addable;
-            }
-        }
-    },
-    "rolecount": {
-        public: true,
-        description: "User count of each Role.",
-        process: function(bot, msg, suffix) {
-            var txt = ""
-            var roles = msg.guild.roles;
-            
-            if(suffix) {
-
-                var role = suffix;
-                role = msg.guild.roles.find('name', suffix);
-                var roleMembers = role.members;
-                
-                txt = 'Members with ' + suffix + ' role. \n';
-
-                roleMembers.forEach(function(member) {
-                    txt += member.user.username + '\n';
-                });
-
-                if(txt.length > 1999) {
-                    txt = "This list is longer than a single discord message can send."
-                }
-            } else {
-
-                roles.forEach(function(val, ind) {
-                    
-                    if(msg.member.hasPermission("MANAGE_ROLES", false, true, true)) {
-                        txt += val.name + " - " + val.members.size + "\n";
-                    } else {
-                        if(val.name === "Mystic" || val.name === "Valor" || val.name === "Instinct") {
-                            txt += val.name + " - " + val.members.size + "\n";
-                        }
-                    }
-                });
-            }
-
-            msg.author.send(txt);
-        }
-    },
-    "chan": {
-        //TODO: In progress: Add logic to create a temporary channel then add some sort of a script to go back and check delete the channel afterwards.
-        public: false,
-        usage: "<pokemon> <location-name> <duration>",
-        description: "Create a temporary text channel intended for collaberating on gym specific raids. Max channel creation time is 90 minutes.",
-        process: function(bot, msg, suffix) {
-            var args = suffix.split(/\s+/g);
-            var pokemon = args[0];
-            var location = args[1];
-            var duration = args[2];
-
-            var channelName = pokemon + "-" + location;
-            
-            if(args.length > 3) {
-                return msg.channel.send(msg.author + " I think something was entered wrong when writing the command. Please type .chan <pokemon> <location> <duration> to create a temporary channel. When entering the location, make sure there are no additional spaces. If the location is multiple words, please use a hyphen instead");
-            }
-
-            if(!Number.isInteger(duration) && duration < Config.chanMinTime && duration > Config.chanMaxTime) {
-                return msg.channel.send(msg.author + " The duration you entered was not valid. Please enter a duration of minutes between 1 and 90");
-            }
-            // TODO: add channel information here so we know what channel to terminate later.
-            var channelData = "";
-
-            msg.guild.createChannel(channelName, 'text')
-                .then(
-                    msg.author.send(msg.author + ' your channel has been created. This channel will expire in ${duration} minutes'),
-                    
-                    fs.writeFile('/data', channelData, function(err) {
-                        if(err) {
-                            console.log(err);
-                        }
-                    })
-                    
-            ).catch(console.error);
-        }
-    }
-}
+process.on('unhandledRejection', (reason, p) => {
+    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+});
 
 if(AuthDetails.hasOwnProperty("client_id")) {
     commands["invite"] = {
@@ -207,7 +49,7 @@ function checkMessageForCommands(msg) {
         console.log("Command " + msg.content + " requested by " + msg.author.username);
         
         try {
-            var cmd = commands[cmdTxt];
+            var cmd = cmdTxt;
             
             if (cmdTxt === 'help') {
                 // Help is a little different since it iterates over all of the other commands
@@ -270,7 +112,15 @@ function checkMessageForCommands(msg) {
                 }
             } else if(cmd) {
                 try{
-                    cmd.process(bot,msg,suffix);
+                    //cmd.process(bot,msg,suffix);
+                    try {
+                        fs.accessSync(`./commands/${cmd}.js`, fs.constants.R_OK);
+                        console.log(`I can see ${cmd}.js!`);
+                        cmd = require(`./commands/${cmd}.js`);
+                        cmd.process(bot,msg,suffix);
+                    } catch (err) {
+                        msg.channel.send("I'm sorry, that command does not exist :/." + err);
+                    }
                 } catch(e) {
                     msg.channel.send(`I'm sorry ${msg.author.username}. Something went wrong with the command :(.`);
                 }
@@ -288,7 +138,12 @@ String.prototype.ucfirst = function() {
     return this.charAt(0).toUpperCase() + this.substr(1).toLowerCase();
 }
 
-// TODO: Add a function to check the file for channels that need to be terminated and terminate any that need to go.
+function fetchMember(msg) {
+    msg.guild.fetchMember(msg.author)
+    .then(member => {
+        return member._roles;
+    })
+}
 
 bot.on('ready', () => {
     console.log("Logged In! Serving in " + bot.guilds.array().length + " servers");
@@ -312,4 +167,7 @@ bot.on('messageUpdate', (oMsg, nMsg) => {
     checkMessageForCommands(nMsg);
 });
 
-bot.login(AuthDetails.token);
+bot.login(AuthDetails.token)
+.catch(err => {
+    console.log("Something bad happened!", err);
+})
