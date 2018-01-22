@@ -30,15 +30,15 @@ process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
 });
 
-if(AuthDetails.hasOwnProperty("client_id")) {
-    commands["invite"] = {
-        public: false,
-        description: "generates an invite link you can use to invite the bot to your server. WARNING: This bot will only function on the Team Harmony server",
-        process: function(bot, msg, suffix) {
-            msg.channel.send("invite link: https://discordapp.com/oauth2/authorize?permissions=268950592&scope=bot&client_id=" + AuthDetails.client_id);
-        }
-    }
-}
+// if(AuthDetails.hasOwnProperty("client_id")) {
+//     commands["invite"] = {
+//         public: false,
+//         description: "generates an invite link you can use to invite the bot to your server. WARNING: This bot will only function on the Team Harmony server",
+//         process: function(bot, msg, suffix) {
+//             msg.channel.send("invite link: https://discordapp.com/oauth2/authorize?permissions=268950592&scope=bot&client_id=" + AuthDetails.client_id);
+//         }
+//     }
+// }
 
 function checkMessageForCommands(msg) {
     // Check if the message is a command
@@ -111,18 +111,13 @@ function checkMessageForCommands(msg) {
                     msg.author.send(info);
                 }
             } else if(cmd) {
-                try{
-                    //cmd.process(bot,msg,suffix);
-                    try {
-                        fs.accessSync(`./commands/${cmd}.js`, fs.constants.R_OK);
-                        console.log(`I can see ${cmd}.js!`);
-                        cmd = require(`./commands/${cmd}.js`);
-                        cmd.process(bot,msg,suffix);
-                    } catch (err) {
-                        msg.channel.send("I'm sorry, that command does not exist :/." + err);
-                    }
-                } catch(e) {
-                    msg.channel.send(`I'm sorry ${msg.author.username}. Something went wrong with the command :(.`);
+                try {
+                    fs.accessSync(`./commands/${cmd}.js`, fs.constants.R_OK);
+                    console.log(`I can see ${cmd}.js!`);
+                    cmd = require(`./commands/${cmd}.js`);
+                    cmd.process(bot,msg,suffix);
+                } catch (err) {
+                    msg.channel.send("I'm sorry, that command does not exist :/. " + err);
                 }
             }
   

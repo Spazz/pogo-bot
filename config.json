@@ -1,4 +1,4 @@
 {
-    "commandPrefix": ".",
+    "commandPrefix": "!",
     "bannedRoles": ["Professor Willow","Officer Jenny" ,"Nurse Joy","Team Harmony Bot","SilphRoad","Silenced","Mystic","Valor","Instinct"]
 }

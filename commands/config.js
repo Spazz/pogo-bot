@@ -39,7 +39,6 @@ function view(msg) {
 function add(msg) {
     return msg.channel.send('This command isn\'t quite ready for prime time yet!')
 }
-
 function update(msg) {
     return msg.channel.send('This command isn\'t quite ready for prime time yet!')
 }
