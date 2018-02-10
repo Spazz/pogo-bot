@@ -4,6 +4,11 @@ exports.public =  true;
 exports.usage = '<city role>';
 exports.description = "Add a city role to yourself. You can add multiple cities at one time by separating them by commas.";
 exports.process = function(bot, msg, suffix) {
+    if (!suffix) {
+        console.log(msg.author.username + " did not designate any cities.");
+        return msg.channel.send(`${msg.author} You did not provide any cities. Please use .addcity <city> separated by comma's to be assigned to their roles.`);
+    }
+
     try {
         var config = {};
         var config = require('../config.json');
@@ -28,20 +33,21 @@ exports.process = function(bot, msg, suffix) {
             notAdd.push(input);
         }
     }
-    if(canAdd.length > 0) msg.channel.send(`I am adding ${canAdd} to your roles.`);
-    if(notAdd.length > 0) msg.channel.send(`I cannot add ${notAdd} to your roles.`);
+
+    // The role(s) is not a banned role so lets check to see if it is availble in the guild.
+    
+    var foundCity = [];
+    if(canAdd.length > 0) {
+        canAdd.forEach( city => {
+            // This isn't working because I need the text values to match exactly (case sensitive). How can I use DYM here???
+            
+        })
+
+        msg.channel.send(`I found these roles. ${Array.from(msg.guild.roles)}`);
+    }
+    if(notAdd.length > 0) msg.channel.send(`I was unable to add ${notAdd} to your roles.`);
     
 }
-
-//     // Check for a suffix. If we don't find one, return an error.
-//     if (!arg) {
-//         console.log(msg.author.username + " did not designate a role.");
-//         return msg.channel.send(`${msg.author} You did not provide a role. Please use .iam <role> to be assigned a team role.`);
-//     }
-//     if(!teams.includes(arg)) {
-//         console.log(msg.author.username + " did not designate an appropriate role.");
-//         return msg.channel.send(`${msg.author} ${arg} is not an appropriate team role. Please use .iam <role> to be assigned a team role. Where <role> is an appropriate Pokemon Team.`);
-//     }
 
 //     try {
 //         var role = msg.guild.roles.find('name', arg);

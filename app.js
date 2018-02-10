@@ -17,7 +17,7 @@ try {
     Config = require('./config.json');
 } catch(e) {
     // No config file, use defaults
-    // Additional defaults can be added here if needed
+    // Additional defaults can be added here if needed. If you add more defaults, then be sure to add them to the config file as well.
     Config.commandPrefix = '!';
 }
 
@@ -112,6 +112,16 @@ function checkMessageForCommands(msg) {
                 }
             } else if(cmd) {
                 try {
+
+                    if(cmd.startsWith('../')) {
+                        //Make sure users can't find extra files on the server
+                        cmd = cmd.replace(/(\.\.\/)+/g, "");
+                        console.log('User tried to search for folders!!!! We removed the malicious code')
+                        return msg.channel.send('Tisk Tisk Tisk... Why do you want to do that?');
+                    }
+
+                    
+
                     fs.accessSync(`./commands/${cmd}.js`, fs.constants.R_OK);
                     console.log(`I can see ${cmd}.js!`);
                     cmd = require(`./commands/${cmd}.js`);
