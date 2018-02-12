@@ -10,8 +10,8 @@ exports.process = function(bot, msg, suffix) {
         var arg = args.shift();
         arg = arg.ucfirst();
     } catch (e) {
-        console.log(`Unable to set variables.`);
-        return msg.channel.send('I am sorry, I was unable to complete that command.');
+        console.log(`Unable to set variables.`, e);
+        return msg.channel.send(`I am sorry, I was unable to complete that command. Error: ${e}`);
     }
 
     //Check if the command was sent to the appropriate channel.
