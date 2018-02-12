@@ -120,8 +120,6 @@ function checkMessageForCommands(msg) {
                         return msg.channel.send('Tisk Tisk Tisk... Why do you want to do that?');
                     }
 
-                    
-
                     fs.accessSync(`./commands/${cmd}.js`, fs.constants.R_OK);
                     console.log(`I can see ${cmd}.js!`);
                     cmd = require(`./commands/${cmd}.js`);
