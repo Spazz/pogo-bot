@@ -62,3 +62,12 @@ exports.process = function(bot, msg, suffix) {
     });
     
 }
+
+/*
+TODOS:
+
+1. Figure out how to add DYM to searching roles in the guild.
+2. Figure out how to send just text back to the channel instead of linking to the role.
+3. Make sure there isn't anything else users can break...
+
+*/
